@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Personal Finance Manager</title>
+  <style>                                                                                                             
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f0f4f8;
+      padding: 20px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #0077b6;
+    }
+
+    /* Dashboard Cards */
+    .dashboard-cards {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      flex: 1;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+      color: #0077b6;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* Transactions Table */
+    .transactions-table {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #e6f0f3;
+      /* border-radius: 15px; */
+    }
+
+    /* Budget Progress */
+    .budget-progress {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .progress-bar {
+      width: 100%;
+      background: #ddd;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-bar .filled {
+      height: 100%;
+      background: #00b4d8;
+    }
+
+    /* Chart Placeholder */
+    .chart-placeholder {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+
+    /* Add Transaction Form */
+    .add-transaction {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .add-transaction input,
+    .add-transaction select,
+    .add-transaction button {
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .add-transaction button {
+      background-color: #0077b6;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .add-transaction button:hover {
+      background-color: #023e8a;
+    }
+    ul{
+      margin-top: 30px;
+    }
+    li{
+      padding: 10px;
+      margin-left: 10px;
+      margin-top: 8px;
+      color: rgb(224, 141, 64)
+    }
+  </style>
+</head>
+<body>
+
+  <div style="display: flex; justify-content: space-between; align-items: center;"><h2 style="display: inline;">Dashboard</h2><button style="height: 40px; width: 200px; margin-left: 1520px; margin-bottom: 20px; border-radius: 5px; background-color: rgb(78, 78, 250); color: white; font-size: 20px; font-weight:lighter;" id="reset" onclick="reset()">RESET</button></div>
+  <div class="dashboard-cards">
+    <div class="card">
+      <h3>Total Balance</h3>
+      <p id="balance">$ 00</p>
+    </div>
+    <div class="card">
+      <h3>Income</h3>
+      <p id="income">$ 00</p>
+    </div>
+    <div class="card">
+      <h3>Expenses</h3>
+      <p id="expenses">$ 00</p>
+    </div>
+    <div class="card">
+      <h3>Savings</h3>
+      <p id="savings">$ 00</p>
+    </div> 
+  </div>
+
+  <h2>Transactions</h2>
+  <div class="transactions-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        
+        
+      </tbody>
+    </table>
+  </div>
+
+  
+  <h2>Expenses by Category</h2>
+  <div class="chart-placeholder">
+    <h3>Expenses Chart</h3>
+    <ul id="ul"></ul>
+  </div>
+
+  <h2>Add New Transaction</h2>
+  <form class="add-transaction">
+    <input type="date" id="trdate"  required>
+    <input type="text" id="trcat" placeholder="Category" required>
+    <input type="number" id="tramount" placeholder="Amount" required>
+    <select id="trtype" required>
+      <option value="">Select Type</option>
+      <option>Income</option>
+      <option>Expense</option>
+    </select>
+    <button type="submit" onclick="fetched(event)">Add Transaction</button>
+  </form>
+
+</body>
+</html>
+<script>
+  let balance = document.getElementById("balance")
+  let income = document.getElementById("income")
+  let expenses = document.getElementById("expenses")
+  let savings = document.getElementById("savings")
+  function fetched(event) {
+      event.preventDefault();
+      const date = document.getElementById("trdate").value;
+      const cat = document.getElementById("trcat").value;
+      const amount = document.getElementById("tramount").value;
+      const type = document.getElementById("trtype").value;
+
+      const data = {
+        date: date,
+        cat: cat,
+        amount: +amount,
+        type: type
+      };
+      if(!date || !cat || !amount || !type){
+        alert("PLEASE GIVE VALID DETAILS TO ENTER TRANSACTION...!")
+        return;
+      }else{
+      fetch('https://687ccb03918b6422432f7f38.mockapi.io/database', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      })
+    .then(response => response.json())
+    .then(() => {
+      addtransaction(); 
+    })
+    .catch(error => {
+      console.error("Error adding transaction:", error);
+    });
+  }
+}
+
+function addtransaction() {
+  
+  
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+  
+  let ul = document.getElementById("ul")
+  fetch('https://687ccb03918b6422432f7f38.mockapi.io/database')
+    .then(res => res.json())
+    .then(data => {
+      const categories = {}
+      let b = 0
+      let i = 0
+      let e = 0
+      let s = 0
+      let ul = document.getElementById("ul");
+      ul.innerHTML = "";
+      data.forEach(ele => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${ele.date}</td>
+          <td>${ele.cat}</td>
+          <td>$ ${ele.amount}</td>
+          <td>${ele.type}</td>
+        `;
+        tbody.appendChild(tr);
+        if(ele.type.toLowerCase()=="income"){
+          b+=(+(ele.amount))
+          i+=(+ele.amount)
+          s+=(+ele.amount)
+        }else{
+          b-=(+(ele.amount))
+          s-=(+ele.amount)
+          e+=(+ele.amount)
+        }
+        const categoryKey = ele.cat.toLowerCase();
+        if (categories[categoryKey]) {
+          categories[categoryKey] += (+ele.amount);
+        } else {
+          categories[categoryKey] = +ele.amount;
+        }
+        balance.innerText=`$ ${b.toFixed(2)}`
+        income.innerText = `$ ${i.toFixed(2)}`
+        expenses.innerText = `$ ${e.toFixed(2)}`
+        savings.innerText = `$ ${s.toFixed(2)}`
+        
+      });
+      for (let key in categories) {
+        let li = document.createElement('li');
+        li.innerText = `Expenses for ${key.toLocaleUpperCase()} is: $${categories[key].toFixed(2)}`;
+        ul.appendChild(li);
+      }
+    })
+    .catch(error => {
+      console.error("Error fetching transactions:", error);
+    });
+    document.getElementById("trdate").value = "";
+    document.getElementById("trcat").value = "";
+    document.getElementById("tramount").value = "";
+    document.getElementById("trtype").value = "";
+    
+}
+
+function reset() {
+  fetch('https://687ccb03918b6422432f7f38.mockapi.io/database')
+    .then(res => res.json())
+    .then(data => {
+      const deletePromises = data.map(item => {
+        return fetch(`https://687ccb03918b6422432f7f38.mockapi.io/database/${item.id}`, {
+          method: 'DELETE'
+        });
+      });
+
+      // After all deletes finish
+      Promise.all(deletePromises).then(() => {
+        alert("All data deleted");
+        document.getElementById("balance").innerText = "$ 00";
+        document.getElementById("income").innerText = "$ 00";
+        document.getElementById("expenses").innerText = "$ 00";
+        document.getElementById("savings").innerText = "$ 00";
+        document.getElementById("tbody").innerHTML = "";
+        document.getElementById("ul").innerHTML = "";
+        document.getElementById("trdate").value = "";
+        document.getElementById("trcat").value = "";
+        document.getElementById("tramount").value = "";
+        document.getElementById("trtype").value = "";
+        // addtransaction();
+      });
+    })
+    .catch(err => {
+      console.error("Error deleting data:", err);
+    });
+}
+
+addtransaction();
+</script>
