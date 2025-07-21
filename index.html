@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login, Register & Personal Finance Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f0f4f8;
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .container, .dashboard {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .auth-box {
+      width: 350px;
+      margin: 100px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+      text-align: center;
+      color: #0077b6;
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: #0077b6;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #023e8a;
+    }
+
+    .switch {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .switch span {
+      color: #0077b6;
+      cursor: pointer;
+    }
+
+    #message {
+      text-align: center;
+      color: red;
+    }
+
+    .dashboard-cards {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      flex: 1;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+      color: #0077b6;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .transactions-table, .budget-progress, .chart-placeholder, .add-transaction {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #e6f0f3;
+    }
+
+    ul {
+      margin-top: 20px;
+    }
+
+    li {
+      padding: 10px;
+      color: rgb(224, 141, 64);
+    }
+
+    #reset {
+      float: right;
+      height: 40px;
+      width: 150px;
+      border-radius: 5px;
+      background-color: rgb(78, 78, 250);
+      color: white;
+      font-size: 16px;
+      font-weight: lighter;
+    }
+  </style>
+</head>
+<body>
+
+<div id="auth" class="auth-box">
+  <h2 id="formTitle">Login</h2>
+  <input type="email" id="email" placeholder="Email" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <button onclick="handleAction()">Login</button>
+  <p id="message"></p>
+  <p class="switch">
+    <span id="toggleText">Don't have an account?</span>
+    <span onclick="toggleForm()">Register</span>
+  </p>
+</div>
+
+<div id="dashboard" class="dashboard hidden">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2>Dashboard</h2>
+    <button id="reset" onclick="reset()">RESET</button>
+  </div>
+
+  <div class="dashboard-cards">
+    <div class="card"><h3>Total Balance</h3><p id="balance">$ 00</p></div>
+    <div class="card"><h3>Income</h3><p id="income">$ 00</p></div>
+    <div class="card"><h3>Expenses</h3><p id="expenses">$ 00</p></div>
+    <div class="card"><h3>Savings</h3><p id="savings">$ 00</p></div>
+  </div>
+
+  <h2>Transactions</h2>
+  <div class="transactions-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <h2>Expenses by Category</h2>
+  <div class="chart-placeholder">
+    <h3>Expenses Chart</h3>
+    <ul id="ul"></ul>
+  </div>
+
+  <h2>Add New Transaction</h2>
+  <form class="add-transaction" onsubmit="fetched(event)">
+    <input type="date" id="trdate" required>
+    <input type="text" id="trcat" placeholder="Category" required>
+    <input type="number" id="tramount" placeholder="Amount" required>
+    <select id="trtype" required>
+      <option value="">Select Type</option>
+      <option>Income</option>
+      <option>Expense</option>
+    </select>
+    <button type="submit">Add Transaction</button>
+  </form>
+</div>
+
+<script>
+  let isLogin = true;
+
+  function toggleForm() {
+    isLogin = !isLogin;
+    document.getElementById("formTitle").innerText = isLogin ? "Login" : "Register";
+    document.querySelector("#auth button").innerText = isLogin ? "Login" : "Register";
+    document.getElementById("toggleText").innerText = isLogin ? "Don't have an account?" : "Already have an account?";
+    document.getElementById("message").innerText = "";
+  }
+
+  function handleAction() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const msg = document.getElementById("message");
+
+    if (!email || !password) {
+      msg.innerText = "Please fill in all fields.";
+      return;
+    }
+
+    if (isLogin) {
+      fetch("https://687ccb03918b6422432f7f38.mockapi.io/userdata")
+        .then(res => res.json())
+        .then(users => {
+          const found = users.find(user => user.emailid === email && user.password === password);
+          if (found) {
+            msg.style.color = "green";
+            msg.innerText = "Login successful!";
+            setTimeout(() => {
+              document.getElementById("auth").classList.add("hidden");
+              document.getElementById("dashboard").classList.remove("hidden");
+              addtransaction();
+            }, 500);
+          } else {
+            msg.style.color = "red";
+            msg.innerText = "Invalid credentials!";
+          }
+        })
+        .catch(() => {
+          msg.innerText = "Error during login.";
+        });
+    } else {
+      fetch("https://687ccb03918b6422432f7f38.mockapi.io/userdata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailid: email, password: password })
+      })
+      .then(() => {
+        msg.style.color = "green";
+        msg.innerText = "User registered!";
+        setTimeout(() => {
+          document.getElementById("auth").classList.add("hidden");
+          document.getElementById("dashboard").classList.remove("hidden");
+          addtransaction();
+        }, 500);
+      })
+      .catch(() => {
+        msg.style.color = "red";
+        msg.innerText = "Error registering user.";
+      });
+    }
+  }
+
+  function fetched(event) {
+    event.preventDefault();
+    const date = document.getElementById("trdate").value;
+    const cat = document.getElementById("trcat").value;
+    const amount = document.getElementById("tramount").value;
+    const type = document.getElementById("trtype").value;
+
+    if (!date || !cat || !amount || !type) {
+      alert("PLEASE GIVE VALID DETAILS TO ENTER TRANSACTION...!");
+      return;
+    }
+
+    fetch('https://687ccb03918b6422432f7f38.mockapi.io/database', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, cat, amount: +amount, type })
+    })
+    .then(() => addtransaction())
+    .catch(error => console.error("Error adding transaction:", error));
+  }
+
+  function addtransaction() {
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+    const ul = document.getElementById("ul");
+    ul.innerHTML = "";
+
+    fetch('https://687ccb03918b6422432f7f38.mockapi.io/database')
+      .then(res => res.json())
+      .then(data => {
+        let b = 0, i = 0, e = 0, s = 0;
+        const categories = {};
+
+        data.forEach(ele => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${ele.date}</td>
+            <td>${ele.cat}</td>
+            <td>$ ${ele.amount}</td>
+            <td>${ele.type}</td>
+          `;
+          tbody.appendChild(tr);
+
+          if (ele.type.toLowerCase() === "income") {
+            b += +ele.amount;
+            i += +ele.amount;
+            s += +ele.amount;
+          } else {
+            b -= +ele.amount;
+            s -= +ele.amount;
+            e += +ele.amount;
+          }
+
+          const key = ele.cat.toLowerCase();
+          categories[key] = (categories[key] || 0) + +ele.amount;
+        });
+
+        document.getElementById("balance").innerText = `$ ${b.toFixed(2)}`;
+        document.getElementById("income").innerText = `$ ${i.toFixed(2)}`;
+        document.getElementById("expenses").innerText = `$ ${e.toFixed(2)}`;
+        document.getElementById("savings").innerText = `$ ${s.toFixed(2)}`;
+
+        for (let key in categories) {
+          const li = document.createElement('li');
+          li.innerText = `Expenses for ${key.toUpperCase()} is: $${categories[key].toFixed(2)}`;
+          ul.appendChild(li);
+        }
+      });
+
+    document.getElementById("trdate").value = "";
+    document.getElementById("trcat").value = "";
+    document.getElementById("tramount").value = "";
+    document.getElementById("trtype").value = "";
+  }
+
+  function reset() {
+    fetch('https://687ccb03918b6422432f7f38.mockapi.io/database')
+      .then(res => res.json())
+      .then(data => {
+        const deletes = data.map(item =>
+          fetch(`https://687ccb03918b6422432f7f38.mockapi.io/database/${item.id}`, { method: 'DELETE' })
+        );
+        return Promise.all(deletes);
+      })
+      .then(() => {
+        alert("All data deleted");
+        document.getElementById("balance").innerText = "$ 00";
+        document.getElementById("income").innerText = "$ 00";
+        document.getElementById("expenses").innerText = "$ 00";
+        document.getElementById("savings").innerText = "$ 00";
+        document.getElementById("tbody").innerHTML = "";
+        document.getElementById("ul").innerHTML = "";
+      });
+  }
+</script>
+</body>
+</html>
